@@ -3,10 +3,10 @@ service:
   externalPort: 3537
 
 livenessProbe:
-  path: /health
+  path: /auth/health
 
 readinessProbe:
-  path: /health
+  path: /auth/health
 
 ingress:
   enabled: true
