@@ -7,7 +7,7 @@ variables:
   CANARY_ENABLED: "true"
   KUBE_INGRESS_BASE_DOMAIN: "irgups.ru"
   KUBE_INGRESS_DEV_BASE_DOMAIN: "k8s.irgups.ru"
-  KUBE_NAMESPACE: abit-service
+  KUBE_NAMESPACE: auth-service
 
 stages:
   - build
