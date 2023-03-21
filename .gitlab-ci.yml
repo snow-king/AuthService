@@ -1,0 +1,98 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+variables:
+  ROLLOUT_RESOURCE_TYPE: deployment
+  REVIEW_DISABLED: "true"
+  CANARY_ENABLED: "true"
+  KUBE_INGRESS_BASE_DOMAIN: "irgups.ru"
+  KUBE_INGRESS_DEV_BASE_DOMAIN: "k8s.irgups.ru"
+  KUBE_NAMESPACE: abit-service
+
+stages:
+  - build
+  - review # off stage
+  - qa
+  - staging
+  - canary
+  - production
+  - incremental rollout 10%
+  - incremental rollout 25%
+  - incremental rollout 50%
+  - incremental rollout 100%
+  - cleanup # off stage
+
+.production_env_setup: &production_url
+  environment:
+    name: production
+    url: http://auth-service.$KUBE_INGRESS_BASE_DOMAIN
+
+.qa_env_setup: &qa_setup
+  extends: .auto-deploy
+  stage: qa
+  when: manual
+  script:
+    - auto-deploy check_kube_domain
+    - auto-deploy download_chart
+    - auto-deploy ensure_namespace
+    - auto-deploy initialize_tiller
+    - auto-deploy create_secret
+    - auto-deploy deploy
+
+qa01:
+  <<: *qa_setup
+  environment:
+    name: qa01
+    url: http://auth-service.$KUBE_INGRESS_DEV_BASE_DOMAIN
+
+staging:
+  extends: .auto-deploy
+  <<: *production_url
+
+production_manual:
+  extends: .auto-deploy
+  <<: *production_url
+
+production:
+  extends: .auto-deploy
+  <<: *production_url
+
+canary:
+  extends: .auto-deploy
+  <<: *production_url
+
+timed rollout 10%:
+  extends: .auto-deploy
+  <<: *production_url
+
+timed rollout 25%:
+  extends: .auto-deploy
+  <<: *production_url
+
+timed rollout 50%:
+  extends: .auto-deploy
+  <<: *production_url
+
+timed rollout 100%:
+  extends: .auto-deploy
+  <<: *production_url
+
+rollout 10%:
+  extends: .auto-deploy
+  <<: *production_url
+
+rollout 25%:
+  extends: .auto-deploy
+  <<: *production_url
+
+rollout 50%:
+  extends: .auto-deploy
+  <<: *production_url
+
+rollout 100%:
+  extends: .auto-deploy
+  <<: *production_url
+
+include:
+  - template: Jobs/Build.gitlab-ci.yml
+  - template: Jobs/Deploy.gitlab-ci.yml
