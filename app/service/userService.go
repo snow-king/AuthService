@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go/v4"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 	"time"
 )
 
@@ -24,12 +25,15 @@ func NewAuthorizer(hashSalt string, signingKey []byte, expireDuration time.Durat
 		expireDuration: expireDuration,
 	}
 }
+
+// SignUp - регистрация пользователя в системе
 func (a *Authorizer) SignUp(userAuth models.LoginUser) {
 	// Create password hash
 	pwd := md5.New()
 	pwd.Write([]byte(userAuth.Password))
 	pwd.Write([]byte(a.hashSalt))
 	userAuth.Password = fmt.Sprintf("%x", pwd.Sum(nil))
+
 }
 
 // SignIn авторизация пользователя по логину и паролю
@@ -39,7 +43,6 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 	//pwd.Write([]byte(a.hashSalt))
 	password := fmt.Sprintf("%x", pwd.Sum(nil))
 	var user models.User
-	fmt.Println(password)
 	if err := models.DbEIS.Where(&models.User{
 		NdsLogin: userAuth.Login,
 		Password: password,
@@ -47,8 +50,14 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 		log.Errorf("error on inserting user: %s", err.Error())
 		return "", errors.ErrUserDoesNotExist
 	}
-	fmt.Println(jwt.At(time.Now().Add(a.expireDuration)))
-	fmt.Println(time.Now())
+	var roles []string
+	fmt.Println(models.DbEIS.Model(&models.User{}).Preload("Roles").Find(&user))
+	for _, role := range user.Roles {
+		roles = append(roles, role.ShortName)
+	}
+	if !slices.Contains(roles, userAuth.Role) {
+		return "", errors.ErrUserDoesNotHaveAccess
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: jwt.At(time.Now().Add(a.expireDuration)),
@@ -56,6 +65,7 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 		},
 		Username: user.NdsLogin,
 		UserId:   user.Id,
+		Roles:    roles,
 	})
 	return token.SignedString(a.signingKey)
 }
