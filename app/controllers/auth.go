@@ -73,6 +73,10 @@ func SignIn(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
 			return
 		}
+		if err == errors.ErrUserDoesNotHaveAccess {
+			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
+			return
+		}
 		if err == errors.ErrUserDoesNotExist {
 			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
 			return
