@@ -57,7 +57,7 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 	if !slices.Contains(roles, userAuth.Role) {
 		return "", errors.ErrUserDoesNotHaveAccess
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &auth.Claims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: jwt.At(time.Now().Add(a.expireDuration)),
 			IssuedAt:  jwt.At(time.Now()),
