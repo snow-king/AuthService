@@ -33,7 +33,6 @@ func (a *Authorizer) SignUp(userAuth models.LoginUser) {
 	pwd.Write([]byte(userAuth.Password))
 	pwd.Write([]byte(a.hashSalt))
 	userAuth.Password = fmt.Sprintf("%x", pwd.Sum(nil))
-
 }
 
 // SignIn авторизация пользователя по логину и паролю
@@ -51,14 +50,14 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 		return "", errors.ErrUserDoesNotExist
 	}
 	var roles []string
-	fmt.Println(models.DbEIS.Model(&models.User{}).Preload("Roles").Find(&user))
+	models.DbEIS.Model(&models.User{}).Preload("Roles").Find(&user)
 	for _, role := range user.Roles {
 		roles = append(roles, role.ShortName)
 	}
 	if !slices.Contains(roles, userAuth.Role) {
 		return "", errors.ErrUserDoesNotHaveAccess
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &auth.Claims{
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: jwt.At(time.Now().Add(a.expireDuration)),
 			IssuedAt:  jwt.At(time.Now()),
@@ -67,5 +66,6 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 		UserId:   user.Id,
 		Roles:    roles,
 	})
+	token.Header["kid"] = "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
 	return token.SignedString(a.signingKey)
 }
