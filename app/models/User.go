@@ -1,9 +1,9 @@
 package models
 
 type LoginUser struct {
-	Login    string `form:"login" json:"login,omitempty"`
-	Password string `form:"password" json:"password,omitempty"`
-	Role     string `form:"role" json:"role"`
+	Login    string `form:"login" json:"login,omitempty" binding:"required"`
+	Password string `form:"password" json:"password,omitempty" binding:"required"`
+	Role     string `form:"role" json:"role" binding:"required"`
 }
 type User struct {
 	Id       int     `gorm:"id"`
