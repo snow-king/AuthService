@@ -15,6 +15,6 @@ func (i JWTInfo) InitJWK() models.JWK {
 		Kid string `json:"kid,omitempty"`
 		K   string `json:"k,omitempty"`
 		Alg string `json:"alg,omitempty"`
-	}{Kty: "HS", Kid: viper.GetString("kid"), K: viper.GetString("signing_key"), Alg: "HS256"})
+	}{Kty: "oct", Kid: viper.GetString("kid"), K: viper.GetString("signing_key"), Alg: "HS256"})
 	return i.JWK
 }
