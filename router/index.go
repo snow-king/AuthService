@@ -9,6 +9,8 @@ import (
 func RegisterHTTPEndpoints(router *gin.RouterGroup) {
 	router.POST("/sign-up", controllers.SignUp)
 	router.POST("/sign-in", controllers.SignIn)
+	router.GET("/O2Auth/:service/index")
+	router.GET("/jwk", controllers.JWK)
 	router.GET("/health", func(context *gin.Context) {
 		context.JSON(http.StatusOK, gin.H{"response": "It's Alive! Alive!!!!"})
 	})
