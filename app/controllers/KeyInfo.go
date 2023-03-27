@@ -8,10 +8,6 @@ import (
 
 func JWK(c *gin.Context) {
 	JwtInfo := new(service.JWTInfo)
-	jwk, err := JwtInfo.InitJWK()
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, newSignInResponse(StatusError, err.Error(), ""))
-		return
-	}
+	jwk := JwtInfo.InitJWK()
 	c.JSON(http.StatusOK, jwk)
 }
