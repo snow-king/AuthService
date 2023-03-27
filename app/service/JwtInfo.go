@@ -12,8 +12,7 @@ type JWTInfo struct {
 }
 
 func (i JWTInfo) InitJWK() (models.JWK, error) {
-	pwd, _ := os.Getwd()
-	file, err := os.ReadFile(pwd + "/app/assets/symmetric.json")
+	file, err := os.ReadFile("app/assets/symmetric.json")
 	if err != nil {
 		return i.JWK, errors.ErrFileDoesNotExist
 	}
