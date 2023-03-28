@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go/v4"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"golang.org/x/exp/slices"
 	"time"
 )
@@ -52,8 +53,10 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 	var roles []string
 	models.DbEIS.Model(&models.User{}).Preload("Roles").Find(&user)
 	for _, role := range user.Roles {
-		roles = append(roles, role.ShortName)
+		fmt.Println(role.JwtName)
+		roles = append(roles, role.JwtName)
 	}
+	fmt.Println(roles)
 	if !slices.Contains(roles, userAuth.Role) {
 		return "", errors.ErrUserDoesNotHaveAccess
 	}
@@ -66,6 +69,6 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 		UserId:   user.Id,
 		Roles:    roles,
 	})
-	token.Header["kid"] = "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
+	token.Header["kid"] = viper.GetString("kid")
 	return token.SignedString(a.signingKey)
 }
