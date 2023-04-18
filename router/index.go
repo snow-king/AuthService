@@ -2,19 +2,18 @@ package router
 
 import (
 	"AuthService/app/controllers"
-	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/gofiber/fiber/v2"
 )
 
-func RegisterHTTPEndpoints(router *gin.RouterGroup) {
-	router.POST("/sign-up", controllers.SignUp)
-	router.POST("/sign-in", controllers.SignIn)
-	router.GET("/O2Auth/:service/index", controllers.Index)
-	router.GET("/O2Auth/:service/callback", controllers.Callback)
-	router.POST("/user/appendRole", controllers.AppendRole)
-	router.POST("/user/appendNetwork", controllers.AppendSocNetworks)
-	router.GET("/jwk", controllers.JWK)
-	router.GET("/health", func(context *gin.Context) {
-		context.JSON(http.StatusOK, gin.H{"response": "It's Alive! Alive!!!!"})
+func RegisterHTTPEndpoints(router fiber.Router) {
+	router.Post("/sign-up", controllers.SignUp)
+	router.Post("/sign-in", controllers.SignIn)
+	router.Get("/O2Auth/:service/index", controllers.Index)
+	router.Get("/O2Auth/:service/callback", controllers.Callback)
+	router.Post("/user/appendRole", controllers.AppendRole)
+	router.Post("/user/appendNetwork", controllers.AppendSocNetworks)
+	router.Get("/jwk", controllers.JWK)
+	router.Get("/health", func(context *fiber.Ctx) error {
+		return context.JSON(fiber.Map{"response": "It's Alive! Alive!!!!"})
 	})
 }

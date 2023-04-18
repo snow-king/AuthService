@@ -2,12 +2,11 @@ package controllers
 
 import (
 	"AuthService/app/service"
-	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/gofiber/fiber/v2"
 )
 
-func JWK(c *gin.Context) {
+func JWK(c *fiber.Ctx) error {
 	JwtInfo := new(service.JWTInfo)
 	jwk := JwtInfo.InitJWK()
-	c.JSON(http.StatusOK, jwk)
+	return c.JSON(jwk)
 }

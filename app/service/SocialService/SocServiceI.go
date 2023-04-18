@@ -2,7 +2,7 @@ package SocialService
 
 type SocService interface {
 	Index() string
-	Callback(code []string) (string, error)
+	Callback(code string) (string, error)
 }
 type Context struct {
 	service SocService

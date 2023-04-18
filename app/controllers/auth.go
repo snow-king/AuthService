@@ -4,7 +4,7 @@ import (
 	"AuthService/app/errors"
 	"AuthService/app/models"
 	"AuthService/app/service"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/viper"
 	"net/http"
 	"time"
@@ -27,18 +27,17 @@ func newResponse(status, msg string) *response {
 	}
 }
 
-func SignUp(c *gin.Context) {
+func SignUp(c *fiber.Ctx) error {
 	var inp models.LoginUser
-	if err := c.BindJSON(inp); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, newResponse(StatusError, err.Error()))
-		return
+	if err := c.BodyParser(&inp); err != nil {
+		c.Status(fiber.StatusBadRequest)
+		return nil
 	}
 	//if err := server.AuthUseCase.SignUp(inp); err != nil {
 	//	c.AbortWithStatusJSON(http.StatusInternalServerError, newResponse(StatusError, err.Error()))
 	//	return
 	//}
-
-	c.JSON(http.StatusOK, newResponse(StatusOk, "user created successfully"))
+	return c.Status(fiber.StatusCreated).JSON(newResponse(StatusOk, "user created successfully"))
 }
 
 type signInResponse struct {
@@ -56,33 +55,29 @@ func newSignInResponse(status, msg, token string) *signInResponse {
 	}
 }
 
-func SignIn(c *gin.Context) {
+func SignIn(c *fiber.Ctx) error {
 	var AuthUseCase = service.NewAuthorizer(
 		viper.GetString("HASH_SALT"),
 		[]byte(viper.GetString("SIGNING_KEY")),
 		viper.GetDuration("TOKEN_TTL")*time.Second,
 	)
 	var inp models.LoginUser
-	if err := c.Bind(&inp); err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
+	if err := c.BodyParser(&inp); err != nil {
+		c.Status(fiber.StatusBadRequest)
+		return nil
 	}
 	token, err := AuthUseCase.SignIn(inp)
 	if err != nil {
 		if err == errors.ErrInvalidAccessToken {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			return c.Status(fiber.StatusForbidden).JSON(newSignInResponse(StatusError, err.Error(), ""))
 		}
 		if err == errors.ErrUserDoesNotHaveAccess {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			return c.Status(fiber.StatusForbidden).JSON(newSignInResponse(StatusError, err.Error(), ""))
 		}
 		if err == errors.ErrUserDoesNotExist {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			return c.Status(fiber.StatusBadRequest).JSON(newSignInResponse(StatusError, err.Error(), ""))
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, newSignInResponse(StatusError, err.Error(), ""))
-		return
+		return c.Status(http.StatusInternalServerError).JSON(newSignInResponse(StatusError, err.Error(), ""))
 	}
-	c.JSON(http.StatusOK, newSignInResponse(StatusOk, "", token))
+	return c.Status(http.StatusOK).JSON(newSignInResponse(StatusOk, "", token))
 }

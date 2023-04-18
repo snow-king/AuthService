@@ -4,43 +4,42 @@ import (
 	"AuthService/app/errors"
 	"AuthService/app/service"
 	"AuthService/app/structures"
-	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/gofiber/fiber/v2"
 )
 
-func AppendRole(c *gin.Context) {
+func AppendRole(c *fiber.Ctx) error {
 	var inp structures.UserRole
-	if err := c.Bind(&inp); err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
+	if err := c.BodyParser(&inp); err != nil {
+		c.Status(fiber.StatusBadRequest)
+		return nil
 	}
 	userS, err := service.NewUserService(inp.UserId)
 	roles := userS.AppendRole(inp.RoleId)
 	if err != nil {
 		if err == errors.ErrUserDoesNotExist {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			c.Status(fiber.StatusBadRequest)
+			return nil
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, newSignInResponse(StatusError, err.Error(), ""))
-		return
+		c.Status(fiber.StatusInternalServerError)
+		return nil
 	}
-	c.JSON(http.StatusCreated, roles)
+	return c.JSON(roles)
 }
-func AppendSocNetworks(c *gin.Context) {
+func AppendSocNetworks(c *fiber.Ctx) error {
 	var inp structures.UserSocNetwork
-	if err := c.Bind(&inp); err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
+	if err := c.BodyParser(&inp); err != nil {
+		c.Status(fiber.StatusBadRequest)
+		return nil
 	}
 	userS, err := service.NewUserService(inp.UserId)
 	networks, err := userS.AddSocNetwork(inp.NetworkId, inp.NetworkNameId)
 	if err != nil {
 		if err == errors.ErrUserDoesNotExist {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			c.Status(fiber.StatusBadRequest)
+			return nil
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, newSignInResponse(StatusError, err.Error(), ""))
-		return
+		c.Status(fiber.StatusInternalServerError)
+		return nil
 	}
-	c.JSON(http.StatusCreated, networks)
+	return c.Status(fiber.StatusOK).JSON(networks)
 }

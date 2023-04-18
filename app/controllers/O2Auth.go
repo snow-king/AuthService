@@ -3,7 +3,7 @@ package controllers
 import (
 	"AuthService/app/errors"
 	"AuthService/app/service/SocialService"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"net/http"
 )
 
@@ -17,36 +17,32 @@ func choseSocial(name string) SocialService.SocService {
 	}
 	return network
 }
-func Index(c *gin.Context) {
-	socNetworkName := c.Param("service")
+func Index(c *fiber.Ctx) error {
+	socNetworkName := c.Params("service")
 	network := choseSocial(socNetworkName)
 	if network != nil {
 		url := network.Index()
-		c.Redirect(http.StatusMovedPermanently, url)
+		return c.Redirect(url, fiber.StatusMovedPermanently)
 	} else {
-		c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, "не верный сервис авторизации", ""))
+		return c.Status(fiber.StatusBadRequest).JSON(newSignInResponse(StatusError, "не верный сервис авторизации", ""))
 	}
 }
-func Callback(c *gin.Context) {
-	socNetworkName := c.Param("service")
+func Callback(c *fiber.Ctx) error {
+	socNetworkName := c.Params("service")
 	network := choseSocial(socNetworkName)
-	authCode := c.Request.URL.Query()["code"]
+	authCode := c.Query("code")
 	token, err := network.Callback(authCode)
 	if err != nil {
 		if err == errors.ErrInvalidAccessToken {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			return c.Status(fiber.StatusForbidden).JSON(newSignInResponse(StatusError, err.Error(), ""))
 		}
 		if err == errors.ErrUserDoesNotHaveAccess {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			return c.Status(fiber.StatusForbidden).JSON(newSignInResponse(StatusError, err.Error(), ""))
 		}
 		if err == errors.ErrUserDoesNotExist {
-			c.AbortWithStatusJSON(http.StatusBadRequest, newSignInResponse(StatusError, err.Error(), ""))
-			return
+			return c.Status(fiber.StatusBadRequest).JSON(newSignInResponse(StatusError, err.Error(), ""))
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, newSignInResponse(StatusError, err.Error(), ""))
-		return
+		return c.Status(http.StatusInternalServerError).JSON(newSignInResponse(StatusError, err.Error(), ""))
 	}
-	c.JSON(http.StatusOK, newSignInResponse(StatusOk, "", token))
+	return c.Status(http.StatusOK).JSON(newSignInResponse(StatusOk, "", token))
 }

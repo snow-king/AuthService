@@ -32,9 +32,9 @@ func (vkS VkService) Index() string {
 	return vkS.conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 }
 
-func (vkS VkService) Callback(code []string) (string, error) {
+func (vkS VkService) Callback(code string) (string, error) {
 	ctx := context.Background()
-	tok, err := vkS.conf.Exchange(ctx, code[0])
+	tok, err := vkS.conf.Exchange(ctx, code)
 	if err != nil {
 		log.Fatal(err)
 	}
