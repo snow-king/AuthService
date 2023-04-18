@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"strings"
 )
 
@@ -11,10 +11,11 @@ type Response struct {
 	Error   []string
 }
 
-func SendResponse(c *gin.Context, response Response) {
+func SendResponse(c *fiber.Ctx, response Response) error {
 	if len(response.Message) > 0 {
-		c.JSON(response.Status, map[string]interface{}{"message": strings.Join(response.Message, "; ")})
+		return c.Status(response.Status).JSON(map[string]interface{}{"message": strings.Join(response.Message, "; ")})
 	} else if len(response.Error) > 0 {
-		c.JSON(response.Status, map[string]interface{}{"error": strings.Join(response.Error, "; ")})
+		return c.Status(response.Status).JSON(map[string]interface{}{"error": strings.Join(response.Error, "; ")})
 	}
+	return nil
 }
