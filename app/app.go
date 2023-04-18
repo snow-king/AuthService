@@ -17,17 +17,16 @@ type App struct {
 }
 
 func (a *App) Run(port string) error {
-
 	router := gin.Default()
 	router.Use(
 		gin.Recovery(),
 		gin.Logger(),
 	)
+
 	models.ConnectDatabase()
 	// Endpoints
 	api := router.Group("/auth")
 	router2.RegisterHTTPEndpoints(api)
-
 	// HTTP Server
 	a.httpServer = &http.Server{
 		Addr:           ":" + port,

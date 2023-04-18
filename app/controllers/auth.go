@@ -58,9 +58,9 @@ func newSignInResponse(status, msg, token string) *signInResponse {
 
 func SignIn(c *gin.Context) {
 	var AuthUseCase = service.NewAuthorizer(
-		viper.GetString("hash_salt"),
-		[]byte(viper.GetString("signing_key")),
-		viper.GetDuration("token_ttl")*time.Second,
+		viper.GetString("HASH_SALT"),
+		[]byte(viper.GetString("SIGNING_KEY")),
+		viper.GetDuration("TOKEN_TTL")*time.Second,
 	)
 	var inp models.LoginUser
 	if err := c.Bind(&inp); err != nil {
