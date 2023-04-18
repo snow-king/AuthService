@@ -13,7 +13,5 @@ func main() {
 		log.Fatalf("%s", err.Error())
 	}
 	app := new(server.App)
-	if err := app.Run("8080"); err != nil {
-		log.Fatalf("%s", err.Error())
-	}
+	app.Run("8080")
 }

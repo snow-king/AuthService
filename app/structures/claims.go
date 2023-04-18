@@ -1,4 +1,4 @@
-package auth
+package structures
 
 import (
 	"github.com/dgrijalva/jwt-go/v4"

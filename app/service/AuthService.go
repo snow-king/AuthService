@@ -1,15 +1,13 @@
 package service
 
 import (
-	"AuthService/app/auth"
-	"AuthService/app/errors"
 	"AuthService/app/models"
+	"AuthService/app/repository"
+	"AuthService/app/structures"
 	"crypto/md5"
 	"fmt"
 	"github.com/dgrijalva/jwt-go/v4"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/slices"
 	"time"
 )
 
@@ -17,6 +15,7 @@ type Authorizer struct {
 	hashSalt       string
 	signingKey     []byte
 	expireDuration time.Duration
+	userRepo       repository.Repository
 }
 
 func NewAuthorizer(hashSalt string, signingKey []byte, expireDuration time.Duration) *Authorizer {
@@ -24,16 +23,22 @@ func NewAuthorizer(hashSalt string, signingKey []byte, expireDuration time.Durat
 		hashSalt:       hashSalt,
 		signingKey:     signingKey,
 		expireDuration: expireDuration,
+		userRepo:       repository.Repository{Database: models.DbEIS},
 	}
 }
 
 // SignUp - регистрация пользователя в системе
-func (a *Authorizer) SignUp(userAuth models.LoginUser) {
+func (a *Authorizer) SignUp(userAuth models.LoginUser) (models.User, string, error) {
 	// Create password hash
 	pwd := md5.New()
 	pwd.Write([]byte(userAuth.Password))
-	pwd.Write([]byte(a.hashSalt))
 	userAuth.Password = fmt.Sprintf("%x", pwd.Sum(nil))
+	user, err := a.userRepo.Create(userAuth)
+	if err != nil {
+		return user, "", err
+	}
+	token, err := a.generateToken(user)
+	return user, token, err
 }
 
 // SignIn авторизация пользователя по логину и паролю
@@ -41,26 +46,18 @@ func (a *Authorizer) SignIn(userAuth models.LoginUser) (string, error) {
 	pwd := md5.New()
 	pwd.Write([]byte(userAuth.Password))
 	//pwd.Write([]byte(a.hashSalt))
-	password := fmt.Sprintf("%x", pwd.Sum(nil))
-	var user models.User
-	if err := models.DbEIS.Where(&models.User{
-		NdsLogin: userAuth.Login,
-		Password: password,
-	}).First(&user).Error; err != nil {
-		log.Errorf("error on inserting user: %s", err.Error())
-		return "", errors.ErrUserDoesNotExist
+	userAuth.Password = fmt.Sprintf("%x", pwd.Sum(nil))
+	user, err := a.userRepo.Create(userAuth)
+	if err != nil {
+		return "", err
 	}
-	var roles []string
-	models.DbEIS.Model(&models.User{}).Preload("Roles").Find(&user)
-	for _, role := range user.Roles {
-		fmt.Println(role.JwtName)
-		roles = append(roles, role.JwtName)
-	}
-	fmt.Println(roles)
-	if !slices.Contains(roles, userAuth.Role) {
-		return "", errors.ErrUserDoesNotHaveAccess
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &auth.Claims{
+	return a.generateToken(user)
+}
+
+// generateToken Генерация токена по модели юзера
+func (a *Authorizer) generateToken(user models.User) (string, error) {
+	roles := a.userRepo.GetRoles(user)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &structures.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: jwt.At(time.Now().Add(a.expireDuration)),
 			IssuedAt:  jwt.At(time.Now()),
