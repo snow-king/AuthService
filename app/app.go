@@ -16,7 +16,7 @@ type App struct {
 
 func (a *App) Run(port string) {
 	app := fiber.New(fiber.Config{
-		Prefork:       true,
+		Prefork:       false,
 		CaseSensitive: true,
 		StrictRouting: true,
 		ServerHeader:  "AuthorizationService",
