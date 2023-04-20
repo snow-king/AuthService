@@ -7,7 +7,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/dgrijalva/jwt-go/v4"
-	"github.com/spf13/viper"
 	"time"
 )
 
@@ -66,6 +65,6 @@ func (a *Authorizer) generateToken(user models.User) (string, error) {
 		UserId:   user.Id,
 		Roles:    roles,
 	})
-	token.Header["kid"] = viper.GetString("kid")
+	//token.Header["kid"] = viper.GetString("kid")
 	return token.SignedString(a.signingKey)
 }
