@@ -11,12 +11,13 @@ type JWTInfo struct {
 }
 
 func (i JWTInfo) InitJWK() models.JWK {
-	key := base64.StdEncoding.EncodeToString([]byte(viper.GetString("SIGNING_KEY")))
+	key := viper.GetString("SIGNING_KEY")
 	i.JWK.Keys = append(i.JWK.Keys, struct {
 		Kty string `json:"kty,omitempty"`
 		Kid string `json:"kid,omitempty"`
 		K   string `json:"k,omitempty"`
 		Alg string `json:"alg,omitempty"`
+		Use string `json:"use,omitempty"`
 	}{Kty: "oct", Kid: viper.GetString("KID"), K: key, Alg: "HS256"})
 	return i.JWK
 }
