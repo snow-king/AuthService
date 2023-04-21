@@ -2,7 +2,6 @@ package service
 
 import (
 	"AuthService/app/models"
-	"encoding/base64"
 	"github.com/spf13/viper"
 )
 
