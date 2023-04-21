@@ -6,5 +6,6 @@ type JWK struct {
 		Kid string `json:"kid,omitempty"`
 		K   string `json:"k,omitempty"`
 		Alg string `json:"alg,omitempty"`
+		Use string `json:"use,omitempty"`
 	} `json:"keys,omitempty"`
 }
