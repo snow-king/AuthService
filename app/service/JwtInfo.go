@@ -2,7 +2,6 @@ package service
 
 import (
 	"AuthService/app/models"
-	"encoding/base64"
 	"github.com/spf13/viper"
 )
 
@@ -11,7 +10,7 @@ type JWTInfo struct {
 }
 
 func (i JWTInfo) InitJWK() models.JWK {
-	key := base64.URLEncoding.EncodeToString([]byte(viper.GetString("SIGNING_KEY")))
+	key := viper.GetString("SIGNING_KEY")
 	i.JWK.Keys = append(i.JWK.Keys, struct {
 		Kty string `json:"kty,omitempty"`
 		Kid string `json:"kid,omitempty"`
